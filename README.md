@@ -4,6 +4,7 @@
 ![Tests](https://img.shields.io/badge/tests-37%20passed-brightgreen)
 ![Framework](https://img.shields.io/badge/framework-Black--Scholes-indigo)
 ![Status](https://img.shields.io/badge/status-Phase%201%20complete-success)
+[![Launch Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/williamcheymol/delta-hedging/main?filepath=notebooks/visualization.ipynb)
 
 A self-contained Python project simulating the delta and gamma hedging of European options under Black-Scholes assumptions.
 
@@ -191,7 +192,7 @@ the noise cancels algebraically, reducing Monte Carlo variance with no additiona
 
 **P&L attribution** — at each time step, the hedging error decomposes into:
 
-$$\text{P\&L} = \underbrace{\frac{1}{2}\Gamma(\Delta S)^2}_{\text{gamma P\&L}} - \underbrace{\frac{1}{2}\Gamma\sigma^2 S^2 \, dt}_{\text{theta cost}}$$
+$$\Delta\Pi = \underbrace{\frac{1}{2}\Gamma(\Delta S)^2}_{\text{gamma}} - \underbrace{\frac{1}{2}\Gamma\sigma^2 S^2 \, dt}_{\text{theta}}$$
 
 The net P&L tracks the difference between realised and implied volatility.
 
