@@ -1,8 +1,6 @@
 # Delta & Gamma Hedging Simulation — European Options 
 
 ![Python](https://img.shields.io/badge/Python-3.11+-blue)
-![Tests](https://img.shields.io/badge/tests-37%20passed-brightgreen)
-![Framework](https://img.shields.io/badge/framework-Black--Scholes-indigo)
 ![Status](https://img.shields.io/badge/status-Phase%201%20complete-success)
 [![Launch Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/williamcheymol/delta-hedging/main?filepath=notebooks/visualization.ipynb)
 
