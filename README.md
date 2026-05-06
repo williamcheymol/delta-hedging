@@ -178,24 +178,6 @@ The notebook contains 8 interactive slides powered by Plotly and ipywidgets:
 
 ---
 
-## Technical highlights
-
-**Vectorisation** — the hedging loop iterates over time steps (sequential by nature) but operates on all Monte Carlo paths simultaneously as numpy arrays. This removes the outer path loop and gives a ~100x speedup over a naive double loop.
-
-**Antithetic variates** — for each random draw $Z$, the simulation also generates a path from $-Z$. Since log-returns satisfy:
-
-$$\log r_1 + \log r_2 = 2\left(r - \frac{\sigma^2}{2}\right)dt$$
-
-the noise cancels algebraically, reducing Monte Carlo variance with no additional computation.
-
-**P&L attribution** — at each time step, the hedging error decomposes into:
-
-$$\Delta\Pi = \underbrace{\frac{1}{2}\Gamma(\Delta S)^2}_{\text{gamma}} - \underbrace{\frac{1}{2}\Gamma\sigma^2 S^2 \, dt}_{\text{theta}}$$
-
-The net P&L tracks the difference between realised and implied volatility.
-
----
-
 ## Parameters (`config.py`)
 
 | Parameter | Default | Description |
@@ -210,11 +192,12 @@ The net P&L tracks the difference between realised and implied volatility.
 
 ---
 
-## Coming soon — Phase 2: Real market data
+## Roadmap
 
-Phase 2 will replace the synthetic GBM paths with real historical data extracted via **yfinance**:
+**Phase 1 ✓** — European Call & Put under GBM · Delta & Delta-Gamma hedging · Transaction costs · Vol mismatch analysis · P&L attribution (gamma vs theta) · Interactive Plotly dashboard · 37 unit tests
 
-- Historical price extraction with dividend and split adjustment
+**Phase 2 — next:**
+- Historical price extraction with dividend and split adjustment via [market-data-fetcher](https://github.com/williamcheymol/market-data-fetcher)
 - Realised volatility estimation (rolling window)
 - Implied vs realised volatility comparison
 - Hedging simulation on real equity paths (S&P 500 constituents)
@@ -241,4 +224,4 @@ Phase 2 will replace the synthetic GBM paths with real historical data extracted
 
 ---
 
-*Black-Scholes framework — Phase 1 requires no external market data.*
+*Black-Scholes framework — Phase 1 is self-contained and requires no external market data.*
