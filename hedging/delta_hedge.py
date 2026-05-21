@@ -1,13 +1,8 @@
 # =============================================================================
 # hedging/delta_hedge.py — Delta hedging simulation (vectorised)
 # =============================================================================
-# Phase 2 upgrades vs Phase 1:
-#   - Vectorised across paths: all n_paths run simultaneously (no outer loop)
-#   - Transaction costs: a small cost is paid on each share traded
-#   - Vol mismatch: hedge with sigma_hedge ≠ sigma_real (vega risk analysis)
-#
-# The inner loop over time steps remains sequential (cash[t] depends on cash[t-1]).
-# But all paths are updated simultaneously as numpy vectors at each step.
+# Vectorised across all n_paths simultaneously at each time step.
+# Supports transaction costs, vol mismatch, and market vol surface hedging.
 # =============================================================================
 
 import numpy as np
@@ -108,4 +103,131 @@ def run_delta_hedge(paths, time_grid, K, r, sigma,
 
     if return_attribution:
         return cash, gamma_pnl, theta_pnl
+    return cash
+
+
+def run_delta_hedge_chunked(S0, K, T_total, r, sigma, n_steps, n_paths,
+                             sigma_hedge=None, transaction_cost=0.0,
+                             option_type="call", return_attribution=False,
+                             chunk_size=50_000, seed=42, verbose=True):
+    """
+    Memory-efficient version of run_delta_hedge for large n_paths (e.g. 1 million).
+
+    Processes paths in batches of `chunk_size` so that RAM usage is bounded at
+    ~chunk_size × n_steps × 8 bytes regardless of total n_paths.
+    At chunk_size=50 000 and n_steps=252 that is ~100 MB per chunk.
+
+    Parameters
+    ----------
+    S0, K, T_total, r, sigma  : same as run_delta_hedge
+    n_steps                   : int   — number of hedging steps
+    n_paths                   : int   — total number of paths (e.g. 1_000_000)
+    chunk_size                : int   — paths per chunk (default 50 000)
+    seed                      : int   — base random seed; chunk i uses seed+i
+    verbose                   : bool  — print progress to stdout
+
+    All other keyword arguments are forwarded to run_delta_hedge unchanged.
+
+    Returns
+    -------
+    Same as run_delta_hedge (pnl array, or tuple with attribution arrays).
+    """
+    from simulation.monte_carlo import simulate_gbm_paths
+
+    pnl_chunks   = []
+    gamma_chunks = []
+    theta_chunks = []
+    done         = 0
+    n_chunks     = (n_paths + chunk_size - 1) // chunk_size
+
+    for i in range(n_chunks):
+        size      = min(chunk_size, n_paths - done)
+        paths, tg = simulate_gbm_paths(S0, r, sigma, T_total, n_steps, size,
+                                       seed=seed + i)
+
+        result = run_delta_hedge(
+            paths, tg, K, r, sigma,
+            sigma_hedge=sigma_hedge,
+            transaction_cost=transaction_cost,
+            option_type=option_type,
+            return_attribution=return_attribution,
+        )
+
+        if return_attribution:
+            pnl, gp, tp = result
+            gamma_chunks.append(gp)
+            theta_chunks.append(tp)
+        else:
+            pnl = result
+
+        pnl_chunks.append(pnl)
+        done += size
+
+        if verbose:
+            pct = 100 * done / n_paths
+            print(f"\r  {done:>9,} / {n_paths:,} paths  ({pct:.0f}%)",
+                  end="", flush=True)
+
+    if verbose:
+        print()
+
+    pnl_all = np.concatenate(pnl_chunks)
+    if return_attribution:
+        return pnl_all, np.concatenate(gamma_chunks), np.concatenate(theta_chunks)
+    return pnl_all
+
+
+def run_surface_hedge(paths, time_grid, K, r, sigma_price, fast_grid):
+    """
+    Delta hedge using an implied volatility surface for delta computation.
+
+    The option premium at t=0 is priced with sigma_price (flat vol), keeping
+    the comparison with run_delta_hedge fair. Deltas at each step are computed
+    using the local IV queried from fast_grid at the current (T_rem, S_t).
+
+    Parameters
+    ----------
+    paths        : np.ndarray (n_steps+1, n_paths)
+    time_grid    : np.ndarray (n_steps+1,)
+    K            : float — strike of the option being hedged
+    r            : float — risk-free rate
+    sigma_price  : float — flat vol used to price the option at t=0
+    fast_grid    : RegularGridInterpolator — as returned by VolSurface.build_fast_grid()
+                   called as fast_grid([[T_rem, S], ...]) → implied vol array
+
+    Returns
+    -------
+    pnl : np.ndarray (n_paths,)
+    """
+    n_steps = paths.shape[0] - 1
+    n_paths = paths.shape[1]
+    dt      = time_grid[1] - time_grid[0]
+    T_total = time_grid[-1]
+    S0      = paths[0]
+
+    option_premium = black_scholes_call(S0, K, T_total, r, sigma_price)
+
+    sigma0 = fast_grid(np.column_stack([np.full(n_paths, T_total), S0]))
+    delta  = black_scholes_delta(S0, K, T_total, r, sigma0)
+
+    cash   = option_premium.copy()
+    shares = delta.copy()
+    cash  -= shares * S0
+
+    for t in range(1, n_steps):
+        S_t   = paths[t]
+        T_rem = T_total - time_grid[t]
+        cash *= np.exp(r * dt)
+
+        sigma_t      = fast_grid(np.column_stack([np.full(n_paths, T_rem), S_t]))
+        new_delta    = black_scholes_delta(S_t, K, T_rem, r, sigma_t)
+        delta_change = new_delta - shares
+        shares      += delta_change
+        cash        -= delta_change * S_t
+
+    S_T  = paths[-1]
+    cash *= np.exp(r * dt)
+    cash += shares * S_T
+    cash -= np.maximum(S_T - K, 0)
+
     return cash

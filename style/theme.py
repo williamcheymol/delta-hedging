@@ -36,14 +36,14 @@ COLORS = {
     "text":       "#e8e8e8",   # --text    : main labels and titles
     "text_muted": "#acacac",   # --muted2  : axis labels, annotations
 
-    # Specific use cases
-    "yellow":       "#e1da02",   # yellow — call option
-    "blue":        "#00b0ff",   # blue  — put option
-    "red":  "#d33501",   # red   — theta P&L component
-    "orange":  "#d77f03",
+    # Accent colours for multi-series charts
+    "yellow": "#e1da02",
+    "blue":   "#00b0ff",
+    "red":    "#d33501",
+    "orange": "#d77f03",
     "purple": "#6903d7",
-    "pink": "#ff6ac3",
-    "white": "#ededed"
+    "pink":   "#ff6ac3",
+    "white":  "#ededed",
 }
 
 # =============================================================================

@@ -62,10 +62,7 @@ def black_scholes_put(S, K, T, r, sigma):
     -------
     float — put price P
     """
-    # Compute d1 and d2 using _d1_d2()
     d1, d2 = _d1_d2(S, K, T, r, sigma)
-
-    # Apply the put formula
     return K * np.exp(-r * T) * (1 - norm.cdf(d2)) - S * (1 - norm.cdf(d1))
 
 
@@ -88,8 +85,6 @@ def black_scholes_delta(S, K, T, r, sigma, option_type="call"):
     if option_type == "call":
         return norm.cdf(d1)
     elif option_type == "put":
-        # Return put delta
-        # put delta = call delta − 1
         return norm.cdf(d1) - 1
     else:
         raise ValueError("option_type must be 'call' or 'put'")
@@ -117,8 +112,6 @@ def black_scholes_gamma(S, K, T, r, sigma):
     float — gamma (always positive)
     """
     d1, _ = _d1_d2(S, K, T, r, sigma)
-
-    # Implement gamma
     return norm.pdf(d1) / (S * sigma * np.sqrt(T))
 
 
@@ -144,8 +137,6 @@ def black_scholes_vega(S, K, T, r, sigma):
     float — vega (always positive)
     """
     d1, _ = _d1_d2(S, K, T, r, sigma)
-
-    # Implement vega
     return S * norm.pdf(d1) * np.sqrt(T)
 
 
@@ -168,7 +159,6 @@ def put_call_parity_check(S, K, T, r, sigma):
     -------
     float — |C − P − (S − K·e^(−rT))|
     """
-    # Compute C and P, then verify the parity relation
     C = black_scholes_call(S, K, T, r, sigma)
     P = black_scholes_put(S, K, T, r, sigma)
     lhs = C - P

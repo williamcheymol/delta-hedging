@@ -64,8 +64,9 @@ def run_gamma_hedge(paths, time_grid, K, r, sigma,
     gamma_target = black_scholes_gamma(S0, K, T_rem, r, sigma)   # gamma of the option we sold (strike K)
     gamma_hedge  = black_scholes_gamma(S0, K_hedge, T_rem, r, sigma)   # gamma of the hedge option (strike K_hedge)
 
-    # Compute h2: number of hedge options to buy
-    h2 = gamma_target / gamma_hedge
+    # Compute h2: number of hedge options to buy.
+    # Clip to avoid blow-up when gamma_hedge → 0 (deep OTM hedge option near expiry).
+    h2 = np.clip(gamma_target / gamma_hedge, -50, 50)
 
     # Pay for hedge options
     price_hedge = black_scholes_call(S0, K_hedge, T_rem, r, sigma)
@@ -92,7 +93,7 @@ def run_gamma_hedge(paths, time_grid, K, r, sigma,
         # Recompute gammas and rebalance h2 (hedge options)
         gamma_target  = black_scholes_gamma(S_t, K, T_rem, r, sigma)
         gamma_hedge   = black_scholes_gamma(S_t, K_hedge, T_rem, r, sigma)
-        new_h2        = gamma_target / gamma_hedge
+        new_h2        = np.clip(gamma_target / gamma_hedge, -50, 50)
         dh2           = new_h2 - h2
 
         price_hedge   = black_scholes_call(S_t, K_hedge, T_rem, r, sigma)

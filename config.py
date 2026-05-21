@@ -12,8 +12,9 @@ r     = 0.05    # Annual risk-free rate (5%)
 SIGMA = 0.20    # Annual volatility (20%)
 
 # --- Simulation parameters ---
-N_STEPS = 252       # Number of hedging steps (1 per trading day)
-N_PATHS = 1000      # Number of Monte Carlo paths
+N_STEPS    = 252         # Number of hedging steps (1 per trading day)
+N_PATHS    = 1_000_000   # Number of Monte Carlo paths (processed in chunks)
+CHUNK_SIZE = 50_000      # Paths per chunk — keeps RAM usage bounded (~200 MB/chunk)
 
 # --- Output paths ---
 RESULTS_DIR  = "results/"
