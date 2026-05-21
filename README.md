@@ -246,16 +246,16 @@ No external data required. Simulates 1,000,000 GBM paths, runs the delta hedge u
   Hedging error (flat vol) : 4.18%
 ```
 
-### Mode 2 — Market vol surface (requires Market Fetcher)
+### Mode 2 — Market vol surface
 
-Pass the options CSV produced by the [Market Fetcher](https://github.com/williamcheymol/market-data-fetcher) project to add a second simulation using real implied vols at each hedging step.
+The bundled sample data (`data/SPY_options_sample.csv`, spot=741.41) lets you run this mode immediately. To use fresher data, produce a new CSV with the [Market Fetcher](https://github.com/williamcheymol/market-data-fetcher) project first.
 
 ```bash
-# Step 1 — fetch live option chain (in the Market Fetcher project)
-python main.py   # produces results/SPY_options.csv
+# With bundled sample data (no setup needed)
+python main.py --csv data/SPY_options_sample.csv --spot 741.41
 
-# Step 2 — run both simulations
-python main.py --csv ../market-data-fetcher/results/SPY_options.csv --spot 741.41
+# Or with freshly fetched data
+python main.py --csv ../market-data-fetcher/results/SPY_options.csv --spot <current_spot>
 ```
 
 ```
@@ -282,7 +282,13 @@ The two results are saved to `results/data/pnl_flat.csv` and `results/data/pnl_s
 
 ## Market Fetcher dependency
 
-Sections 9 and 10 of the notebook, and `main.py --csv` mode, require a live option chain CSV that is **not included in this repository** — it must be produced by the companion project:
+Sections 9 and 10 of the notebook work **out of the box** using the bundled sample data:
+
+```
+data/SPY_options_sample.csv   # SPY option chain — 1 557 contracts, fetched 2025-05-19, spot=741.41
+```
+
+To use fresher market data, run the companion project:
 
 > **[market-data-fetcher](https://github.com/williamcheymol/market-data-fetcher)** — fetches live option chains via yfinance and extracts implied volatility via Black-Scholes inversion (Brent's method).
 
@@ -291,7 +297,13 @@ Sections 9 and 10 of the notebook, and `main.py --csv` mode, require a live opti
 python main.py   # produces results/SPY_options.csv
 ```
 
-The CSV contains one row per contract with columns `strike`, `T`, `implied_vol`, `option_type`. Once generated, pass its path and the spot price at fetch time to this project's `main.py --csv`.
+Then update `CSV_PATH` and `SPOT` at the top of section 9 in the notebook, or pass the path directly to `main.py --csv`:
+
+```bash
+python main.py --csv path/to/SPY_options.csv --spot <spot_at_fetch_time>
+```
+
+The CSV contains one row per contract with columns `strike`, `T`, `implied_vol`, `option_type`.
 
 ---
 
