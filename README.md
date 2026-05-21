@@ -328,7 +328,7 @@ the noise cancels algebraically, reducing Monte Carlo variance with no additiona
 
 **P&L attribution** — at each time step, the hedging error decomposes into:
 
-$$\text{P\&L} = \underbrace{\frac{1}{2}\Gamma(\Delta S)^2}_{\text{gamma P\&L}} - \underbrace{\frac{1}{2}\Gamma\sigma^2 S^2 \, dt}_{\text{theta cost}}$$
+$$\Pi = \underbrace{\frac{1}{2}\Gamma(\Delta S)^2}_{\text{gamma}} - \underbrace{\frac{1}{2}\Gamma\sigma^2 S^2 \, dt}_{\text{theta}}$$
 
 The net P&L tracks the difference between realised and implied volatility.
 
